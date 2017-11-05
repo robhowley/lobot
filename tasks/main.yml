@@ -1,6 +1,6 @@
 
 ---
-- include_vars: vars/all.yml
+- include_vars: vars/defaults.yml
 
 # this is for older syntax ansible; allows usage
 # - include: "{{ lobot_[task-name].yml }}"
