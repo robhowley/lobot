@@ -7,6 +7,8 @@
 - name: lobot - make the tasks available with relative path variable
   set_fact:
     lobot_role_path: "{{ role_path }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
 
 - name: lobot - resolve relative path vars
   include_vars: vars/net_vars.yml
+  no_log: "{{ lobot_keep_it_quiet }}"
