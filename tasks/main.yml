@@ -1,7 +1,5 @@
 
 ---
-- include_vars: vars/defaults.yml
-
 # this is for older syntax ansible; allows usage
 # - include: "{{ lobot_[task-name].yml }}"
 - name: lobot - make the tasks available with relative path variable
