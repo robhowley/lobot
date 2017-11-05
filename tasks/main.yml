@@ -1,0 +1,12 @@
+
+---
+- include_vars: vars/all.yml
+
+# this is for older syntax ansible; allows usage
+# - include: "{{ lobot_[task-name].yml }}"
+- name: lobot - make the tasks available with relative path variable
+  set_fact:
+    lobot_role_path: "{{ role_path }}"
+
+- name: lobot - resolve relative path vars
+  include_vars: vars/net_vars.yml

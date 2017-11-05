@@ -1,0 +1,2 @@
+
+default_stack_policy: "{{ lobot_role_path }}/{{ default_stack_policy_filename }}"
