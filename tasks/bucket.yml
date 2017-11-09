@@ -10,7 +10,7 @@
 #   output_prefix
 
 - set_fact:
-    template_out: "{{ template_out | (default(default_rendered_template_dirs.bucket) + '/' + stack_name + '-' + name + '.template') }}"
+    template_out: "{{ template_out | default(default_rendered_template_dirs.bucket) + '/' + stack_name + '-' + name + '.template' }}"
 
 - template:
     src: "{{ j2_templates.bucket }}"
