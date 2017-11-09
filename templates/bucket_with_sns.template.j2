@@ -43,7 +43,7 @@ Resources:
             AWS:
 {% if sns_topics.principal_subscribe_access is defined %}
 {% for principal in sns_topics.principal_subscribe_access %}
-            - {{ sns_topics.get('principal_subscribe_access', '') }}
+            - {{ principal }}
 {% endfor %}
 {% else %}
             - ${AWS::AccountId}
