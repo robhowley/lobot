@@ -9,13 +9,24 @@
 #   principal_sns_subscribe
 #   output_prefix
 
+- name: Creates directory for rendered templates
+  file:
+    path: "{{ default_rendered_template_dirs.bucket }}"
+    state: directory
+    mode: 0777
+    recurse: yes
+  when: template_out is undefined
+
+
 - set_fact:
     template_out: "{{ template_out | default(default_rendered_template_dirs.bucket) + '/' + stack_name + '-' + name + '.template' }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
 
 - template:
     src: "{{ j2_templates.bucket }}"
     dest: "{{ template_out }}"
     force: yes
+  no_log: "{{ lobot_keep_it_quiet }}"
 
 
 - name: "lobot - Stack {{ stack_name }}: deploy bucket {{ name }}"
