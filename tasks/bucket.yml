@@ -19,7 +19,7 @@
 
 
 - set_fact:
-    template_out: "{{ template_out | default(default_rendered_template_dirs.bucket) + '/' + stack_name + '-' + name + '.template' }}"
+    template_out: "{{ template_out | (default(default_rendered_template_dirs.bucket) + '/' + stack_name + '-' + name + '.template') }}"
   no_log: "{{ lobot_keep_it_quiet }}"
 
 - template:
