@@ -6,7 +6,15 @@
 #   stack_policy
 #   template_out
 #   principal_read_access
-#   principal_sns_subscribe
+#   sns_topics
+#     principal_subscribe_access
+#     topics
+#     - name
+#       resource_name
+#       event
+#       key_filter_type
+#       key_filter
+#       output_name
 #   output_prefix
 
 - name: Creates directory for rendered templates
@@ -38,7 +46,6 @@
     template_parameters:
       S3BucketName: "{{ name }}"
       BucketReadAccess: "{{ (principal_read_access | default([])) | join(',') }}"
-      TopicSubscriptionAccess: "{{ principal_sns_subscribe | join(',') }}"
   register: bucket_stack
   no_log: "{{ lobot_keep_it_quiet }}"
 

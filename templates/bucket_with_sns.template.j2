@@ -9,15 +9,11 @@ Parameters:
     Description: list of aws principals that can read from the bucket
     Type: CommaDelimitedList
     Default: ${AWS::AccountId}
-  TopicSubscriptionAccess:
-    Description: list of aws principals that can subscribe to the sns topic(s)
-    Type: CommaDelimitedList
-    Default: ${AWS::AccountId}
 
 Resources:
 
-{% if sns_topics is defined and sns_topics %}
-{% for topic in sns_topics %}
+{% if sns_topics is defined %}
+{% for topic in sns_topics.topics %}
   {{ topic.get('resource_name', topic.name) }}:
     Type: AWS::SNS::Topic
     Properties:
@@ -44,11 +40,11 @@ Resources:
         - Sid: Allow specified aws principals to subscribe
           Effect: Allow
           Principal:
-            AWS: !Ref TopicSubscriptionAccess
+            AWS: {{ sns_topics.get('principal_subscribe_access', ${AWS::AccountId}) }}
           Action: sns:Subscribe
           Resource: "*"
       Topics:
-{% for topic in sns_topics %}
+{% for topic in sns_topics.topics %}
         - Ref: {{ topic.get('resource_name', topic.name) }}
 {% endfor %}
 
@@ -56,15 +52,15 @@ Resources:
 
   NewBucket:
     Type: AWS::S3::Bucket
-{% if sns_topics is defined and sns_topics %}
+{% if sns_topics is defined %}
     DependsOn: SNSPublishAndSubscribeToTopicPolicy
 {% endif %}
     Properties:
       BucketName: !Ref S3BucketName
-{% if sns_topics is defined and sns_topics %}
+{% if sns_topics is defined %}
       NotificationConfiguration:
         TopicConfigurations:
-{% for topic in sns_topics %}
+{% for topic in sns_topics.topics %}
         - Event: {{ s3_event_shorthand.get(topic.event, topic.event) }}
           Topic:
             Ref: {{ topic.get('resource_name', topic.name) }}
@@ -77,8 +73,6 @@ Resources:
 {% endif %}
 {% endfor %}
 {% endif %}
-
-
 
   NewBucketRead:
     Type: AWS::S3::BucketPolicy
@@ -107,11 +101,10 @@ Outputs:
   BucketArn:
     Value: !GetAtt NewBucket.Arn
 
-{% if sns_topics is defined and sns_topics %}
-{% for topic in sns_topics %}
-  {{ topic.get('output_name', topic.resource_name + 'ObjectAddedTopicArn') }}:
-    Value:
-      Ref: {{ topic.get('resource_name', topic.name) }}
+{% if sns_topics is defined %}
+{% for topic in sns_topics.topics %}
+  {{ topic.get('output_name', (topic.resource_name or topic.name) + 'TopicArn') }}:
+    Value: !Ref {{ topic.get('resource_name', topic.name) }}
 
 {% endfor %}
 {% endif %}
