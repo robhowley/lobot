@@ -9,6 +9,16 @@ Parameters:
     Description: list of aws principals that can read from the bucket
     Type: CommaDelimitedList
     Default: ${AWS::AccountId}
+{% if sns_topics is defined %}
+  TopicSubscribeAccess:
+    Description: list of aws principals that can subscribe to the created topics
+    Type: CommaDelimitedList
+{% if sns_topics.principal_subscribe_access is defined %}
+    Default: {{ sns_topics.principal_subscribe_access | join(',') }}
+{% else %}
+    Default: ${AWS::AccountId}
+{% endif %}
+{% endif %}
 
 Resources:
 
@@ -40,15 +50,7 @@ Resources:
         - Sid: Allow specified aws principals to subscribe
           Effect: Allow
           Principal:
-            AWS:
-{% if sns_topics.principal_subscribe_access is defined %}
-{% for principal in sns_topics.principal_subscribe_access %}
-            - {{ principal }}
-{% endfor %}
-{% else %}
-            - ${AWS::AccountId}
-{% endif %}
-
+            AWS: !Ref TopicSubscribeAccess
           Action: sns:Subscribe
           Resource: "*"
       Topics:
