@@ -72,7 +72,7 @@ Resources:
           Filter:
             S3Key:
               Rules:
-              - Name: {{ topic.get('key_filter_type', 'prefix'} }}
+              - Name: {{ topic.get('key_filter_type', 'prefix') }}
                 Value: {{ topic.key_filter }}
 {% endif %}
 {% endfor %}
