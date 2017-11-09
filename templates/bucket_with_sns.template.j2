@@ -40,7 +40,7 @@ Resources:
         - Sid: Allow specified aws principals to subscribe
           Effect: Allow
           Principal:
-            AWS: {{ sns_topics.get('principal_subscribe_access', ${AWS::AccountId}) }}
+            AWS: {{ sns_topics.get('principal_subscribe_access', '${AWS::AccountId}') }}
           Action: sns:Subscribe
           Resource: "*"
       Topics:
