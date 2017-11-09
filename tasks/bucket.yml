@@ -34,7 +34,7 @@
     state: "{{ state | default('present') }}"
     stack_policy: "{{ stack_policy | default(default_stack_policy) }}"
     template: "{{ template_out }}"
-    tags: "{{ stack_tags | default(None) }}"
+    tags: "{{ stack_tags | default({}) }}"
     template_parameters:
       S3BucketName: "{{ name }}"
       BucketReadAccess: "{{ (principal_read_access | default([])) | join(',') }}"
