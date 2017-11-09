@@ -1,4 +1,9 @@
 
+# abs paths to all jinja2 templates
+j2_templates:
+  bucket: "{{ lobot_role_path }}/templates/bucket_with_sns.template.j2"
+
+
 # set full paths for defaults
 default_stack_policy: "{{ lobot_role_path }}/{{ default_stack_policy_filename }}"
 

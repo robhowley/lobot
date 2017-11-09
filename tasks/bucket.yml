@@ -1,16 +1,34 @@
 
+# params
+#   stack_name
+#   name
+#   state
+#   stack_policy
+#   template_out
+#   principal_read_access
+#   principal_sns_subscribe
+#   output_prefix
+
+- set_fact:
+    template_out: "{{ template_out | (default(default_rendered_template_dirs.bucket) + '/' + {{ stack_name }}-{{ name }}.template }}"
+
+- template:
+    src: "{{ j2_templates.bucket }}"
+    dest: "{{ template_out }}"
+    force: yes
+
 
 - name: "lobot - Stack {{ stack_name }}: deploy bucket {{ name }}"
   cloudformation:
     stack_name: "{{ stack_name }}"
     state: "{{ state | default('present') }}"
     stack_policy: "{{ stack_policy | default(default_stack_policy) }}"
-    template: "{{ template_out | (default(default_rendered_template_dirs.bucket) + '/' + {{ stack_name }}-{{ name }}.template }}"
+    template: "{{ template_out }}"
     tags: "{{ stack_tags | default(None) }}"
     template_parameters:
       S3BucketName: "{{ name }}"
-      BucketReadAccess: "{{ (bucket_read_access | default([])) | join(',') }}"
-      TopicSubscriptionAccess: "{{ bucket_sns_subscribe | join(',') }}"
+      BucketReadAccess: "{{ (principal_read_access | default([])) | join(',') }}"
+      TopicSubscriptionAccess: "{{ principal_sns_subscribe | join(',') }}"
   register: bucket_stack
   no_log: "{{ lobot_keep_it_quiet }}"
 
