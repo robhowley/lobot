@@ -40,12 +40,20 @@ Resources:
         - Sid: Allow specified aws principals to subscribe
           Effect: Allow
           Principal:
-            AWS: {{ sns_topics.get('principal_subscribe_access', '${AWS::AccountId}') }}
+            AWS:
+{% if sns_topics.principal_subscribe_access is defined %}
+{% for principal in sns_topics.principal_subscribe_access %}
+            - {{ sns_topics.get('principal_subscribe_access', '') }}
+{% endfor %}
+{% else %}
+            - ${AWS::AccountId}
+{% endif %}
+
           Action: sns:Subscribe
           Resource: "*"
       Topics:
 {% for topic in sns_topics.topics %}
-        - Ref: {{ topic.get('resource_name', topic.name) }}
+        - !Ref {{ topic.get('resource_name', topic.name) }}
 {% endfor %}
 
 {% endif %}
@@ -62,8 +70,7 @@ Resources:
         TopicConfigurations:
 {% for topic in sns_topics.topics %}
         - Event: {{ s3_event_shorthand.get(topic.event, topic.event) }}
-          Topic:
-            Ref: {{ topic.get('resource_name', topic.name) }}
+          Topic: !Ref {{ topic.get('resource_name', topic.name) }}
 {% if topic.key_filter is defined %}
           Filter:
             S3Key:
@@ -77,16 +84,14 @@ Resources:
   NewBucketRead:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket:
-        Ref: NewBucket
+      Bucket: !Ref NewBucket
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
         - Sid: Allow new bucket read
           Effect: Allow
           Principal:
-            AWS:
-              Ref: BucketReadAccess
+            AWS: !Ref BucketReadAccess
           Action:
           - s3:List*
           - s3:Get*
