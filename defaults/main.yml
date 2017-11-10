@@ -10,3 +10,8 @@ s3_event_shorthand:
   created: s3:ObjectCreated:*
   removed: s3:ObjectRemoved:*
   all: s3:*
+
+s3_access_shorthand:
+  r:
+  w:
+  d:
