@@ -45,7 +45,6 @@
     tags: "{{ stack_tags | default({}) }}"
     template_parameters:
       S3BucketName: "{{ name }}"
-      BucketReadAccess: "{{ (principal_read_access | join(',')) if principal_read_access is defined else None }}"
   register: bucket_stack
   no_log: "{{ lobot_keep_it_quiet }}"
 
