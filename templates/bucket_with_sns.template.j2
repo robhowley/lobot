@@ -8,7 +8,11 @@ Parameters:
   BucketReadAccess:
     Description: list of aws principals that can read from the bucket
     Type: CommaDelimitedList
-    Default: {{ (principal_read_access | join(',')) if principal_read_access is defined else '${AWS::AccountId}' }}
+{% if principal_read_access is defined %}
+    Default: {{ principal_read_access | join(',') }}
+{% else %}
+    Default: ${AWS::AccountId}
+{% endif %}
 {% if sns_topics is defined %}
   TopicSubscribeAccess:
     Description: list of aws principals that can subscribe to the created topics
