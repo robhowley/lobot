@@ -1,0 +1,58 @@
+
+# params
+#   stack_name
+#   name
+#   state
+#   stack_policy
+#   template_out
+#   principal_read_access
+#   sns_topics
+#     principal_subscribe_access
+#     topics
+#     - name
+#       resource_name
+#       event
+#       key_filter_type
+#       key_filter
+#       output_name
+#   output_managed_policies
+#   - name
+#     resource_name
+#     policy
+#   stack_output_prefix
+
+- name: Creates directory for rendered templates
+  file:
+    path: "{{ default_rendered_template_dirs.bucket }}"
+    state: directory
+    mode: 0777
+    recurse: yes
+  when: template_out is undefined
+
+- set_fact:
+    template_out: "{{ template_out | default(default_rendered_template_dirs.bucket + '/' + stack_name + '-' + name + '.template') }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
+
+- template:
+    src: "{{ j2_templates.bucket }}"
+    dest: "{{ template_out }}"
+    force: yes
+  no_log: "{{ lobot_keep_it_quiet }}"
+
+
+- name: "lobot - Stack {{ stack_name }}: deploy bucket {{ name }}"
+  cloudformation:
+    stack_name: "{{ stack_name }}"
+    state: "{{ state | default('present') }}"
+    stack_policy: "{{ stack_policy | default(default_stack_policy) }}"
+    template: "{{ template_out }}"
+    tags: "{{ stack_tags | default({}) }}"
+    template_parameters:
+      S3BucketName: "{{ name }}"
+  register: bucket_stack
+  no_log: "{{ lobot_keep_it_quiet }}"
+
+- name: "lobot - store {{ stack_name }} stack variable"
+  set_fact:
+    "{{ stack_output_prefix }}lobot_bucket": "{{ bucket_stack.stack_outputs }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
