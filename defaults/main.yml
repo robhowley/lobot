@@ -13,5 +13,7 @@ s3_event_shorthand:
 
 s3_access_shorthand:
   r: s3:Get*
+  l: s3:List*
   w: s3:Put*
   d: s3:DeleteObject*
+  full: s3:*
