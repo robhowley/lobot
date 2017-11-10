@@ -83,9 +83,13 @@ Resources:
           Effect: Allow
           Principal:
             AWS:
-{% for principal in (principal_read_access or ['${AWS::AccountId}']) %}
+{% if principal_read_access is defined %}
+{% for principal in principal_read_access %}
             - {{ principal }}
 {% endfor %}
+{% else %}
+            - ${AWS::AccountId}
+{% endif %}
           Action:
           - s3:List*
           - s3:Get*
