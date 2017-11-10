@@ -51,5 +51,5 @@
 
 - name: "lobot - store {{ stack_name }} stack variable"
   set_fact:
-    "{{ stack_output_prefix }}lobot_bucket": "{{ bucket_stack }}"
+    "{{ stack_output_prefix }}lobot_bucket": "{{ bucket_stack.stack_outputs }}"
   no_log: "{{ lobot_keep_it_quiet }}"
