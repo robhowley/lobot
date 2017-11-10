@@ -16,6 +16,9 @@
 #       key_filter
 #       output_name
 #   output_managed_policies
+#   - name
+#     resource_name
+#     policy
 #   stack_output_prefix
 
 - name: Creates directory for rendered templates
