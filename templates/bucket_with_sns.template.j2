@@ -83,7 +83,7 @@ Resources:
           Effect: Allow
           Principal:
             AWS:
-{% for principal in (principal_read_access or ['${AWS::AccountId}'] %}
+{% for principal in (principal_read_access or ['${AWS::AccountId}']) %}
             - {{ principal }}
 {% endfor %}
           Action:
