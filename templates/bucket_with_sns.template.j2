@@ -118,7 +118,7 @@ Resources:
         - Effect: Allow
           Action:
 {% for policy in managed_policy.policy %}
-          - s3_access_shorthand.get(policy, policy)
+          - {{ s3_access_shorthand.get(policy, policy) }}
 {% endfor %}
           Resource:
           - !Sub arn:aws:s3:::${NewBucket}
