@@ -11,6 +11,6 @@
     template_out: "{{ template_out | default(default_rendered_template_dirs.get(deployment_type) + '/' + default_rendered_filename) }}"
 
 - template:
-    src: "{{ j2_templates.get(resource_type) }}"
+    src: "{{ j2_templates.get(deployment_type) }}"
     dest: "{{ template_out }}"
     force: yes

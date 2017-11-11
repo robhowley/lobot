@@ -1,21 +1,21 @@
 
 # params
-#   state
-#   stack_policy
-#   template_out
-#   stack_output_prefix
+#   state (optional)
+#   stack_policy (optional)
+#   template_out (optional)
+#   stack_output_prefix (optional)
 
 #   stack_name
 #   name
-#   output_managed_policies
+#   output_managed_policies (optional)
 #   - name
-#     resource_name
-#     policy
+#     resource_name (optional)
+#     policy (accepts lambda_access_shorthand)
 
-#   description
-#   managed_policies
+#   description (optional)
+#   managed_policies (optional)
 #   environment_configuration
-#     variables
+#     variables (optional)
 #     memory_size
 #     runtime
 #     timeout
@@ -24,14 +24,16 @@
 #     zip_file ... this or the next two
 #     bucket
 #     key
-#   schedule
-#   cloudwatch_alarms
-#     topics
+#   schedule (optional)
+#   cloudwatch_alarms (optional)
+#   - topics
+#       name (optional)
+#       resource_name (optional)
 #       subscriptions
-#         endpoint
-#         protocol (def: email)
+#       - endpoint
+#         protocol (optional, def: email)
 #     alarms
-#       name
+#     - name
 #       description (optional)
 #       metric
 #         name (e.g. Errors)
@@ -39,7 +41,6 @@
 #         period
 #         evaluation_periods
 #         threshold
-
 
 
 - include: tasks/internal/render_template.yml
