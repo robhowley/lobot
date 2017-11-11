@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy a lambda function
+
+Resources:
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: "/"
+{% if managed_policies is defined %}
+{% for managed_policy_arn in managed_policies %}
+      ManagedPolicyArns:
+      - {{ managed_policy_arn }}
+{% endfor %}
+{% endif %}
+      Policies:
+      - PolicyName: logs
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LambdaRole
+    Properties:
+      FunctionName: {{ name }}
+      Role: !GetAtt LambdaRole.Arn
+{% if description is defined %}
+      Description: {{ description }}
+{% endif %}
+      Environment:
+        Variables: {{ environment_configuration.variables }}
+      Code:
+{% if code.zip_file is defined %}
+        ZipFile: {{ code.zip_file }}
+{% else %}
+        S3Bucket: {{ code.bucket }}
+        S3Key: {{ code.key }}
+{% endif %}
+      Handler: {{ code.function_name }}
+      MemorySize: {{ environment_configuration.memory_size }}
+      Runtime: {{ environment_configuration.runtime }}
+      Timeout: {{ environment_configuration.timeout }}
+
+{% if schedule is defined %}
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    DependsOn: LambdaFunction
+    Properties:
+      Description: !Sub schedule on which lambda ${LambdaFunction} will be invoked
+      ScheduleExpression: {{ schedule }}
+      State: ENABLED
+      Targets:
+      - Id: ScheduleTarget
+        Arn: !GetAtt LambdaFunction.Arn
+
+  PermissionForScheduleToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+    - LambdaFunction
+    - ScheduleRule
+    Properties:
+      FunctionName: !Ref LambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: Arn: !GetAtt LambdaFunction.Arn
+{% endif %}
+
+{% if cloudwatch_alarms is defined %}
+{% for alarm_topic in cloudwatch_alarms.topics %}
+  "{{ alarm_topic.get('resource_name', 'name') }}":
+    Type: AWS::SNS::Topic
+    Properties":
+      Subscription":
+{% for subscription in alarm_topic.subscriptions %}
+      - Endpoint: {{ subscription.endpoint }}
+        Protocol: {{ subscription.get('protocol', 'email') }}
+{% endfor %}
+
+{% for alarm in cloudwatch_alarms.alarms %}
+  "{{ alarm.get('resource_name', 'name') }}":
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: {{ alarm.name }}
+      AlarmDescription: {{ alarm.get('description', 'Cloudwatch alarm for metric ' + alarm.metric.name + ' of function ' + name }}
+      Namespace: AWS/Lambda
+      MetricName: {{ alarm.metric.name }}
+      Statistic: {{ cloudwatch_statistic_shorthand.get(alarm.metric.statistic, alarm.metric.statistic) }}
+      Period: {{ alarm.metric.period }}
+      EvaluationPeriods: {{ alarm.metric.evaluation_periods }}
+      Threshold: {{ alarm.metric.threshold }}
+      Dimensions:
+      - Name: FunctionName
+        Value: !Ref LambdaFunction
+      AlarmActions:
+{% if cloudwatch_alarms.topics | length > 1 %}
+{% for alarm_actions in alarm.topics %}
+      - !Ref {{ alarm_actions }}
+{% endfor %}
+{% else %}
+      - !Ref cloudwatch_alarms.topics[0]
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% for managed_policy in output_managed_policies or [] %}
+  {{ managed_policy.get('resource_name', managed_policy.name) }}:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: The ability to interact with ${LambdaFunction}
+      Path: "/"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+{% if managed_policy.policy == 'full' %}
+          - {{ lambda_access_shorthand.get(managed_policy.policy) }}
+{% else %}
+{% for policy in managed_policy.policy %}
+          - {{ lambda_access_shorthand.get(policy, policy) }}
+{% endfor %}
+{% endif %}
+          Resource:
+          - !GetAtt LambdaFunction.Arn
+
+{% endfor %}
+
+Outputs:
+  LambdaFunctionArn:
+    Value: !GetAtt LambdaFunction.Arn
+
+  LambdaRoleName:
+    Value: !Ref LambdaRole
+
+  LambdaRoleArn:
+    Value: !GetAtt LambdaRole.Arn
+
+{% for managed_policy in output_managed_policies or [] %}
+  {{  managed_policy.name }}:
+    Value: !Ref {{ managed_policy.get('resource_name', managed_policy.name) }}
+
+{% endfor %}

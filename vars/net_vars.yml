@@ -2,6 +2,7 @@
 # abs paths to all jinja2 templates
 j2_templates:
   bucket: "{{ lobot_role_path }}/templates/bucket_with_sns.template.j2"
+  lambda: "{{ lobot_role_path }}/templates/lambda.template.j2"
 
 
 # set full paths for defaults
@@ -10,8 +11,10 @@ default_stack_policy: "{{ lobot_role_path }}/{{ default_stack_policy_filename }}
 default_rendered_template_dir: "{{ lobot_role_path }}/cfn_templates"
 default_rendered_template_dirs:
   bucket: "{{ default_rendered_template_dir }}/buckets"
+  lambda: "{{ default_rendered_template_dir }}/lambdas"
 
 
 # set full paths for importable tasks
 lobot:
   bucket: "{{ lobot_role_path }}/{{ default_rel_paths.bucket }}"
+  lambda: "{{ lobot_role_path }}/{{ default_rel_paths.lambda }}"

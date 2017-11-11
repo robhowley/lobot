@@ -1,0 +1,54 @@
+
+# params
+#   state
+#   stack_policy
+#   template_out
+#   stack_output_prefix
+
+#   stack_name
+#   name
+#   output_managed_policies
+#   - name
+#     resource_name
+#     policy
+
+#   description
+#   managed_policies
+#   environment_configuration
+#     variables
+#     memory_size
+#     runtime
+#     timeout
+#   code
+#     function_name
+#     zip_file ... this or the next two
+#     bucket
+#     key
+#   schedule
+#   cloudwatch_alarms
+#     topics
+#       subscriptions
+#         endpoint
+#         protocol (def: email)
+#     alarms
+#       name
+#       description (optional)
+#       metric
+#         name (e.g. Errors)
+#         statistic (accepts cloudwatch_statistic_shorthand)
+#         period
+#         evaluation_periods
+#         threshold
+
+
+
+- include: tasks/internal/render_template.yml
+  vars:
+    deployment_type: lambda
+    default_rendered_filename: "{{ stack_name + '-' + name + '.template' }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
+
+- include: tasks/internal/no_stack_param_deploy.yml
+  vars:
+    deployment_type: lambda
+  no_log: "{{ lobot_keep_it_quiet }}"
