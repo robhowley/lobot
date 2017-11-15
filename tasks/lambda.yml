@@ -43,13 +43,13 @@
 #         threshold
 
 
-- include: "{{ role_path }}/tasks/internal/render_template.yml"
+- include: "{{ lobot_role_path }}/tasks/internal/render_template.yml"
   vars:
     deployment_type: lambda
     default_rendered_filename: "{{ stack_name + '-' + name + '.template' }}"
   no_log: "{{ lobot_keep_it_quiet }}"
 
-- include: "{{ role_path }}/tasks/internal/no_stack_param_deploy.yml"
+- include: "{{ lobot_role_path }}/tasks/internal/no_stack_param_deploy.yml"
   vars:
     deployment_type: lambda
   no_log: "{{ lobot_keep_it_quiet }}"
