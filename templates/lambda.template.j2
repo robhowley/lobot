@@ -15,8 +15,8 @@ Resources:
           Action: sts:AssumeRole
       Path: "/"
 {% if managed_policies is defined %}
-{% for managed_policy_arn in managed_policies %}
       ManagedPolicyArns:
+{% for managed_policy_arn in managed_policies %}
       - {{ managed_policy_arn }}
 {% endfor %}
 {% endif %}
