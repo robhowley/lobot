@@ -106,6 +106,7 @@ Resources:
       Statistic: {{ cloudwatch_statistic_shorthand.get(alarm.metric.statistic, alarm.metric.statistic) }}
       Period: {{ alarm.metric.period }}
       EvaluationPeriods: {{ alarm.metric.evaluation_periods }}
+      ComparisonOperator: {{ comparison_operator_shorthand.get(alarm.metric.comparison_operator, alarm.metric.comparison_operator) }}
       Threshold: {{ alarm.metric.threshold }}
       Dimensions:
       - Name: FunctionName

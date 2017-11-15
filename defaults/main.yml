@@ -30,3 +30,9 @@ cloudwatch_statistic_shorthand:
   max: Maximum
   avg: Average
   sum: Sum
+
+comparison_operator_shorthand:
+  gt: GreaterThanThreshold:
+  gte: GreaterThanOrEqualToThreshold
+  lt: LessThanThreshold
+  lte: LessThanOrEqualToThreshold
