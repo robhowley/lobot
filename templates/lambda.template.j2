@@ -85,7 +85,7 @@ Resources:
 
 {% if cloudwatch_alarms is defined %}
 {% for alarm_topic in cloudwatch_alarms.topics %}
-  "{{ alarm_topic.get('resource_name', 'name') }}":
+  "{{ alarm_topic.get('resource_name') or alarm_topic.get('name') }}":
     Type: AWS::SNS::Topic
     Properties:
       DisplayName: {{ alarm_topic.get('name') or alarm_topic.get('resource_name') or (loop.index0|string()) }}
@@ -96,7 +96,7 @@ Resources:
 {% endfor %}
 
 {% for alarm in cloudwatch_alarms.alarms %}
-  "{{ alarm.get('resource_name', 'name') }}":
+  "{{ alarm.get('resource_name') or alarm.get('name') }}":
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: {{ alarm.name }}
