@@ -42,7 +42,10 @@ Resources:
 {% endif %}
 {% if environment_configuration.variables is defined %}
       Environment:
-        Variables: {{ environment_configuration.variables }}
+        Variables:
+{% for key, val in environment_configuration.variables.items() %}
+          {{ key }}: {{ val }}
+{% endfor %}
 {% endif %}
       Code:
 {% if code.zip_file is defined %}
