@@ -1,0 +1,13 @@
+
+- name: "lobot - Stack {{ stack_name }}: deploy {{ deployment_type }} {{ name }}"
+  cloudformation:
+    stack_name: "{{ stack_name }}"
+    state: "{{ state | default('present') }}"
+    stack_policy: "{{ stack_policy | default(default_stack_policy) }}"
+    template: "{{ template_out }}"
+    tags: "{{ stack_tags | default({}) }}"
+  register: deployed_stack
+
+- name: "lobot - store {{ stack_name }} stack variable"
+  set_fact:
+    "{{ stack_output_prefix }}lobot_{{ deployment_type }}": "{{ deployed_stack.stack_outputs }}"

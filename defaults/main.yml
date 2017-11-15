@@ -5,6 +5,7 @@ default_stack_policy_filename: files/default-stack-policy.policy
 
 default_rel_paths:
   bucket: tasks/bucket.yml
+  lambda: tasks/lambda.yml
 
 s3_event_shorthand:
   created: s3:ObjectCreated:*
@@ -17,3 +18,21 @@ s3_access_shorthand:
   w: s3:Put*
   d: s3:DeleteObject*
   full: s3:*
+
+lambda_access_shorthand:
+  i: lambda:Invoke*
+  u: lambda:UpdateFunction*
+  full: lambda:*
+
+cloudwatch_statistic_shorthand:
+  count: SampleCount
+  min: Minimum
+  max: Maximum
+  avg: Average
+  sum: Sum
+
+comparison_operator_shorthand:
+  gt: GreaterThanThreshold
+  gte: GreaterThanOrEqualToThreshold
+  lt: LessThanThreshold
+  lte: LessThanOrEqualToThreshold
