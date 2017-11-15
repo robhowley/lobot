@@ -32,7 +32,7 @@ cloudwatch_statistic_shorthand:
   sum: Sum
 
 comparison_operator_shorthand:
-  gt: GreaterThanThreshold:
+  gt: GreaterThanThreshold
   gte: GreaterThanOrEqualToThreshold
   lt: LessThanThreshold
   lte: LessThanOrEqualToThreshold
