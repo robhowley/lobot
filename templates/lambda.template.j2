@@ -85,7 +85,7 @@ Resources:
   "{{ alarm_topic.get('resource_name', 'name') }}":
     Type: AWS::SNS::Topic
     Properties":
-      DisplayName: {{ alarm_topic.get('name', loop.index0) }}
+      DisplayName: {{ alarm_topic.get('name') or alarm_topic.get('resource_name') or (loop.index0|string()) }}
       Subscription":
 {% for subscription in alarm_topic.subscriptions %}
       - Endpoint: {{ subscription.endpoint }}
@@ -97,7 +97,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: {{ alarm.name }}
-      AlarmDescription: {{ alarm.get('description', 'Cloudwatch alarm for metric ' + alarm.metric.name + ' of function ' + name }}
+      AlarmDescription: {{ alarm.get('description', 'Cloudwatch alarm for metric ' + alarm.metric.name + ' of function ' + name) }}
       Namespace: AWS/Lambda
       MetricName: {{ alarm.metric.name }}
       Statistic: {{ cloudwatch_statistic_shorthand.get(alarm.metric.statistic, alarm.metric.statistic) }}
