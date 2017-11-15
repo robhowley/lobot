@@ -89,7 +89,7 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       DisplayName: {{ alarm_topic.get('name') or alarm_topic.get('resource_name') or (loop.index0|string()) }}
-      Subscription":
+      Subscription:
 {% for subscription in alarm_topic.subscriptions %}
       - Endpoint: {{ subscription.endpoint }}
         Protocol: {{ subscription.get('protocol', 'email') }}
@@ -111,13 +111,9 @@ Resources:
       - Name: FunctionName
         Value: !Ref LambdaFunction
       AlarmActions:
-{% if cloudwatch_alarms.topics | length > 1 %}
-{% for alarm_actions in alarm.topics %}
+{% for alarm_actions in alarm.get('topics', []) %}
       - !Ref {{ alarm_actions }}
 {% endfor %}
-{% else %}
-      - !Ref cloudwatch_alarms.topics[0]
-{% endif %}
 {% endfor %}
 
 {% endfor %}
