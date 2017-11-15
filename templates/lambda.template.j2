@@ -112,7 +112,7 @@ Resources:
       - Name: FunctionName
         Value: !Ref LambdaFunction
       AlarmActions:
-{% for alarm_actions in alarm.get('topics', []) %}
+{% for alarm_actions in alarm.get('notify_topics', []) %}
       - !Ref {{ alarm_actions }}
 {% endfor %}
 {% endfor %}
