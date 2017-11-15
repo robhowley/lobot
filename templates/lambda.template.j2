@@ -80,7 +80,7 @@ Resources:
       FunctionName: !Ref LambdaFunction
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: Arn: !GetAtt LambdaFunction.Arn
+      SourceArn: !GetAtt LambdaFunction.Arn
 {% endif %}
 
 {% if cloudwatch_alarms is defined %}
