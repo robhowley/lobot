@@ -116,6 +116,8 @@ Resources:
       - !Ref cloudwatch_alarms.topics[0]
 {% endif %}
 {% endfor %}
+
+{% endfor %}
 {% endif %}
 
 {% for managed_policy in output_managed_policies or [] %}
