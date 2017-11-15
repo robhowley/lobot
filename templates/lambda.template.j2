@@ -87,7 +87,7 @@ Resources:
 {% for alarm_topic in cloudwatch_alarms.topics %}
   "{{ alarm_topic.get('resource_name', 'name') }}":
     Type: AWS::SNS::Topic
-    Properties":
+    Properties:
       DisplayName: {{ alarm_topic.get('name') or alarm_topic.get('resource_name') or (loop.index0|string()) }}
       Subscription":
 {% for subscription in alarm_topic.subscriptions %}
