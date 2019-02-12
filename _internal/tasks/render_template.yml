@@ -1,0 +1,14 @@
+
+- name: "lobot - internal - create directory for rendered {{ deployment_type }} templates"
+  file:
+    path: "{{ default_rendered_template_dirs.get(deployment_type) }}"
+    state: directory
+    mode: 0777
+    recurse: yes
+  when: template_out is undefined
+
+- name: "lobot - internal - render final cloudformation template"
+  template:
+    src: "{{ cloudformation_template }}"
+    dest: "{{ template_out | default(default_rendered_template_dirs.get(deployment_type) + '/' + rendered_filename) }}"
+    force: yes

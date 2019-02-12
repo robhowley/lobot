@@ -1,0 +1,18 @@
+
+- set_fact:
+    cased_template_params: "{{ lambda_function | convert_environment_variables | snake_to_pascal }}"
+
+- include_role:
+    name: lobot/_internal
+  vars:
+    dynamic_render: true
+    deployment_type: lambda_function
+    rendered_filename: "{{ stack_name }}-{{ function_name }}.template"
+    cloudformation_template: "{{ role_path }}/cloudformation/lambda.template.j2"
+  no_log: "{{ lobot_keep_it_quiet }}"
+
+- name: "lobot - store {{ stack_name }} stack variable"
+  set_fact:
+    lobot_stacks:
+      "{{ stack_output_prefix }}lambda_function": "{{ deployed_stack }}"
+  no_log: "{{ lobot_keep_it_quiet }}"

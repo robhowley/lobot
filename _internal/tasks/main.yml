@@ -1,0 +1,10 @@
+
+- name: lobot - make the tasks available with relative path variable
+  set_fact:
+    lobot_role_path: "{{ role_path }}/.."
+    lobot_internal_role_path: "{{ role_path }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
+
+- name: lobot - bring in shared vars
+  include_vars: vars/all.yml
+  no_log: "{{ lobot_keep_it_quiet }}"

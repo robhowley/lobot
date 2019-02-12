@@ -6,3 +6,4 @@ galaxy_info:
   description: Reusing cloudformation templates is good.
 
 dependencies:
+- role: lobot/_internal
