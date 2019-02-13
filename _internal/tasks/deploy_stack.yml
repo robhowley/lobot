@@ -1,21 +1,14 @@
 
-- name:
-
-
-- name: "lobot - internal - Deploy stack {{ stack_name }} for resource {{ name }}"
+- name: "{{ lobot_stdout_prefix }} - Deploy stack {{ stack_name }}"
   cloudformation:
     stack_name: "{{ stack_name }}"
     state: "{{ state | default('present') }}"
     stack_policy: "{{ stack_policy | default(default_stack_policy) }}"
     template: "{{ final_cloudformation_template }}"
     tags: "{{ stack_tags | default({}) }}"
-    template_parameters:
-      S3BucketName: "{{ name }}"
+    template_parameters: "{{ template_params | default({}) }}"
   register: deployed_stack
-  no_log: "{{ lobot_keep_it_quiet }}"
 
-- name: "lobot - internal - store {{ stack_name }} stack variable in "
+- name: "{{ lobot_stdout_prefix }} - store {{ stack_name }} stack variable in "
   set_fact:
-    lobot_stacks:
-      "{{ stack_output_prefix }}lambda_function": "{{ deployed_stack }}"
-  no_log: "{{ lobot_keep_it_quiet }}"
+    lobot_stacks: "{{ (lobot_stacks | default({})) | combine({stack_name: deployed_stack}) }}"

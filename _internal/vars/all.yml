@@ -1,9 +1,8 @@
 
-lobot_keep_it_quiet: false
-
 # set full paths for defaults
-default_stack_policy: "{{ lobot_role_path }}/files/default-stack-policy.policy"
+default_stack_policy: "{{ lobot_internal_role_path }}/files/default-stack-policy.policy"
 
-default_rendered_template_dir: "{{ lobot_role_path }}/dynamic_cfn_templates"
+render_template_path: "{{ lobot_internal_role_path }}/tasks/render_template.yml"
+default_rendered_template_dir: "{{ lobot_role_path }}/rendered_cfn_templates"
 default_rendered_template_dirs:
   lambda_function: "{{ default_rendered_template_dir }}/lambdas"

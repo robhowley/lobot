@@ -26,10 +26,6 @@ Parameters:
   CodeS3Key:
     Type: String
 
-  EnvironmentVariables:
-    Type: String
-    Default: ''
-
   ManagedPolicyArns:
     Type: CommaDelimitedList
     Default: ''
@@ -100,9 +96,13 @@ Resources:
     DependsOn: LambdaRole
     Properties:
       FunctionName: !Ref FunctionName
+{% if j2_env.environment_variables %}
       Environment:
         Variables:
-          KEY_VAL_STRING: !Ref EnvironmentVariables
+{% for key, val in j2_env.environment_variables.items() %}
+          {{ key }}: {{ val }}
+{% endfor %}
+{% endif %}
       Code:
         S3Bucket: !Ref CodeS3Bucket
         S3Key: !Ref CodeS3Key
@@ -137,7 +137,7 @@ Resources:
       - Arn: !GetAtt Lambda.Arn
         Id: ScheduleTarget
 
-  PermissionToInvokeLambdaOnScheduled:
+  PermissionToInvokeLambdaOnSchedule:
     Type: AWS::Lambda::Permission
     Condition: HasSchedule
     DependsOn:

@@ -1,6 +1,13 @@
 
-- set_fact:
-    cased_template_params: "{{ lambda_function | convert_environment_variables | snake_to_pascal }}"
+- name: "{{ lobot_stdout_prefix }} - set cloudformation and j2_env paramers"
+  set_fact:
+    j2_env: "{{ {'environment_variables': (lambda_function.pop('environment_variables') or {})} }}"
+    cased_template_params: "{{
+        lambda_function
+          | copy_keys(exclude=['environment_variables'])
+          | snake_keys_to_pascal
+      }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
 
 - include_role:
     name: lobot/_internal
@@ -8,10 +15,11 @@
     dynamic_render: true
     deployment_type: lambda_function
     rendered_filename: "{{ stack_name }}-{{ function_name }}.template"
-    cloudformation_template: "{{ role_path }}/cloudformation/lambda.template.j2"
+    cloudformation_template: cloudformation/lambda.template.j2
+    template_params: "{{ cased_template_params }}"
   no_log: "{{ lobot_keep_it_quiet }}"
 
-- name: "lobot - store {{ stack_name }} stack variable"
+- name: "{{ lobot_stdout_prefix }} - store {{ stack_name }} stack variable"
   set_fact:
     lobot_stacks:
       "{{ stack_output_prefix }}lambda_function": "{{ deployed_stack }}"

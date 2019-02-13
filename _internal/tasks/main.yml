@@ -1,10 +1,17 @@
 
-- name: lobot - make the tasks available with relative path variable
+- name: "{{ lobot_stdout_prefix }} - make the tasks available with relative path variable"
   set_fact:
     lobot_role_path: "{{ role_path }}/.."
     lobot_internal_role_path: "{{ role_path }}"
-  no_log: "{{ lobot_keep_it_quiet }}"
 
-- name: lobot - bring in shared vars
+- name: "{{ lobot_stdout_prefix }} - bring in shared vars"
   include_vars: vars/all.yml
-  no_log: "{{ lobot_keep_it_quiet }}"
+
+- include: tasks/render_template.yml
+  vars:
+    rendered_filename: "{{ stack_name }}.template"
+    template_destination_key_name: "{{ stack_name }}"
+
+- include: tasks/deploy_stack.yml
+  vars:
+    final_cloudformation_template: "{{ lobot_rendered_template_paths[stack_name] }}"

@@ -1,9 +1,0 @@
-
-allow_duplicates: true
-
-galaxy_info:
-  author: robert.howley
-  description: Reusing cloudformation templates is good.
-
-dependencies:
-- role: lobot/_internal
