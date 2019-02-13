@@ -1,0 +1,18 @@
+
+- name: "set cloudformation and j2_env paramers"
+  set_fact:
+    j2_env: "{{ bucket | copy_keys(include=['sns_topics']) }}"
+    cased_template_params: "{{ bucket | copy_keys(exclude=['sns_topics']) | snake_keys_to_pascal }}"
+    final_stack_name: "{{ stack_name | default(bucket.bucket_name + '-stack') }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
+
+- include_role:
+    name: lobot/_internal
+  vars:
+    deployment_type: bucket
+    rendered_filename: "{{ bucket.bucket_name }}.template"
+    lookup_name: "{{ bucket.bucket_name }}"
+    stack_name: "{{ final_stack_name }}"
+    cloudformation_template: cloudformation/bucket_with_sns.template.j2
+    template_params: "{{ cased_template_params }}"
+  no_log: "{{ lobot_keep_it_quiet }}"

@@ -1,0 +1,198 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: bucket that publishes filtered sns events
+Parameters:
+  BucketName:
+    Description: Name of the bucket
+    Type: String
+
+  BucketReadAccess:
+    Description: list of aws principals that can read from the bucket
+    Type: CommaDelimitedList
+    Default: ''
+
+  CreateReadManagedPolicy:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+
+  CreateWriteManagedPolicy:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+
+  CreateFullControlManagedPolicy:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+
+
+Conditions:
+  IsReadMpRequested: !Equals [!Ref CreateReadManagedPolicy, 'true']
+
+  IsWriteMpRequested: !Equals [!Ref CreateWriteManagedPolicy, 'true']
+
+  IsFullControlMpRequested: !Equals [!Ref CreateFullControlManagedPolicy, 'true']
+
+  HasDefaultReadPolicyPrincipals: !Not [!Equals [!Join ['', !Ref BucketReadAccess], '']]
+
+
+Resources:
+
+{% if j2_env.sns_topics is defined %}
+{% for topic in j2_env.sns_topics.topics %}
+  {{ topic.get('resource_name', topic.name) }}:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: {{ topic.name }}
+
+{% endfor %}
+
+  SNSPublishAndSubscribeToTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Id: SNSSubscribeTopicPolicy
+        Version: '2012-10-17'
+        Statement:
+        - Sid: Allow the bucket to publish to topic
+          Effect: Allow
+          Principal:
+            AWS: "*"
+          Action: sns:Publish
+          Resource: "*"
+          Condition:
+            ArnLike:
+              aws:SourceArn: !Sub arn:aws:s3:::${BucketName}
+        - Sid: Allow specified aws principals to subscribe
+          Effect: Allow
+          Principal: "*"
+          Action: sns:Subscribe
+          Resource: "*"
+      Topics:
+{% for topic in j2_env.sns_topics.topics %}
+      - !Ref {{ topic.get('resource_name', topic.name) }}
+{% endfor %}
+{% endif %}
+
+  NewBucket:
+    Type: AWS::S3::Bucket
+{% if j2_env.sns_topics is defined %}
+    DependsOn: SNSPublishAndSubscribeToTopicPolicy
+{% endif %}
+    Properties:
+      BucketName: !Ref BucketName
+{% if j2_env.sns_topics is defined %}
+      NotificationConfiguration:
+        TopicConfigurations:
+{% for topic in j2_env.sns_topics.topics %}
+        - Event: {{ topic.event }}
+          Topic: !Ref {{ topic.get('resource_name', topic.name) }}
+{% if topic.key_filter is defined %}
+          Filter:
+            S3Key:
+              Rules:
+              - Name: {{ topic.get('key_filter_type', 'prefix') }}
+                Value: {{ topic.key_filter }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+  NewBucketRead:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref NewBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: Allow new bucket read
+          Effect: Allow
+          Principal:
+            AWS:
+              !If
+              - HasDefaultReadPolicyPrincipals
+              - !Ref BucketReadAccess
+              - !Ref AWS::AccountId
+          Action:
+          - s3:List*
+          - s3:Get*
+          Resource:
+          - !Sub arn:aws:s3:::${NewBucket}
+          - !Sub arn:aws:s3:::${NewBucket}/*
+
+  ReadBucketManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: IsReadMpRequested
+    Properties:
+      Description: !Sub The ability to read from ${NewBucket}
+      Path: "/"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:List*
+          - s3:Get*
+          Resource:
+          - !Sub arn:aws:s3:::${NewBucket}
+          - !Sub arn:aws:s3:::${NewBucket}/*
+
+  WriteToBucketManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: IsWriteMpRequested
+    Properties:
+      Description: !Sub The ability to write to ${NewBucket}
+      Path: "/"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:List*
+          - s3:Put*
+          Resource:
+          - !Sub arn:aws:s3:::${NewBucket}
+          - !Sub arn:aws:s3:::${NewBucket}/*
+
+  FullControlBucketManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: IsFullControlMpRequested
+    Properties:
+      Description: The ability to fully control ${NewBucket}
+      Path: "/"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action: s3:*
+          Resource:
+          - !Sub arn:aws:s3:::${NewBucket}
+          - !Sub arn:aws:s3:::${NewBucket}/*
+
+
+Outputs:
+  BucketName:
+    Value: !Ref NewBucket
+
+  BucketArn:
+    Value: !GetAtt NewBucket.Arn
+
+  ReadBucketManagedPolicy:
+    Condition: IsReadMpRequested
+    Value: !Ref ReadBucketManagedPolicy
+
+  WriteToBucketManagedPolicy:
+    Condition: IsWriteMpRequested
+    Value: !Ref WriteToBucketManagedPolicy
+
+  FullControlBucketManagedPolicy:
+    Condition: IsFullControlMpRequested
+    Value: !Ref FullControlBucketManagedPolicy
+
+{% if j2_env.sns_topics is defined %}
+{% for topic in j2_env.sns_topics.topics %}
+  {{ topic.get('resource_name', topic.name) + 'Arn' }}:
+    Value: !Ref {{ topic.get('resource_name', topic.name) }}
+
+{% endfor %}
+{% endif %}

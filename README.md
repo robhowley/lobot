@@ -12,7 +12,7 @@ Using [ansible galaxy](https://galaxy.ansible.com/), add the following to your [
 ```bash
 - src: https://github.com/robhowley/lobot
   scm: git
-  version: v0.1.0
+  version: v1.0.0
 ```
 
 ## Example
@@ -27,24 +27,21 @@ you would do the following ...
 ```bash
 - hosts: localhost
   connection: local
-  roles:
-  - lobot
   
   tasks:
-  - include: "{{ lobot.bucket }}"
+  - include_role:
+      name: lobot/bucket
     vars:
-      stack_name: test-bucket-stack
-      name: test-bucket
-      principal_read_access: "{{ list_principals_who_can_read_by_default }}"
-      sns_topics:
-        topics:
-        - name: ObjectAddedTopic
-          event: created
-      output_managed_policies:
-      - name: ReadWriteListMP
-        policy: rwl
-      stack_output_prefix: test_
+      bucket:
+        bucket_name: some-test-bucket-12342314
+        sns_topics:
+          topics:
+          - resource_name: TestSnsTopic
+            name: dev-test-sns-topic
+            event: s3:ObjectCreated:*
+        create_read_managed_policy: 'true'
+        create_write_managed_policy: 'true'
 
   - debug:
-      var: test_lobot_bucket
+      var: lobot_stacks
 ```

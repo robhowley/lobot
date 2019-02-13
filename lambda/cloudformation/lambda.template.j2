@@ -1,0 +1,161 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create lambda with optional invoke schedule and attached managed policies; export invoke managed policy.
+
+Parameters:
+  FunctionName:
+    Type: String
+
+  Handler:
+    Type: String
+
+  Runtime:
+    Type: String
+    Default: python2.7
+
+  TimeoutInSeconds:
+    Type: String
+    Default: 300
+
+  MemorySize:
+    Type: String
+    Default: 256
+
+  CodeS3Bucket:
+    Type: String
+
+  CodeS3Key:
+    Type: String
+
+  ManagedPolicyArns:
+    Type: CommaDelimitedList
+    Default: ''
+
+  ScheduleExpression:
+    Type: String
+    Default: ''
+
+  EventSourceArn:
+    Type: String
+    Default: ''
+
+
+Conditions:
+  HasManagedPolicyArns: !Not [!Equals [!Join ['', !Ref ManagedPolicyArns], '']]
+
+  HasSchedule: !Not [!Equals [!Ref ScheduleExpression, '']]
+
+  HasEventSource: !Not [!Equals [!Ref EventSourceArn, '']]
+
+
+Resources:
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        Fn::If:
+        - HasManagedPolicyArns
+        - !Ref ManagedPolicyArns
+        - !Ref AWS::NoValue
+      Policies:
+      - PolicyName: logs
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+      - PolicyName: can-invoke-self
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action: lambda:invokeFunction
+            Resource: !Sub arn:aws:lambda:*:*:function:${FunctionName}
+
+  Lambda:
+    Type: AWS::Lambda::Function
+    DependsOn: LambdaRole
+    Properties:
+      FunctionName: !Ref FunctionName
+{% if j2_env.environment_variables %}
+      Environment:
+        Variables:
+{% for key, val in j2_env.environment_variables.items() %}
+          {{ key }}: {{ val }}
+{% endfor %}
+{% endif %}
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+      Handler: !Ref Handler
+      MemorySize: !Ref MemorySize
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: !Ref Runtime
+      Timeout: !Ref TimeoutInSeconds
+
+  LambdaManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: !Sub The ability to interact with ${Lambda}
+      Path: "/"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action: lambda:InvokeFunction
+          Resource:
+          - !GetAtt Lambda.Arn
+
+  ScheduleRuleForLambda:
+    Type: AWS::Events::Rule
+    Condition: HasSchedule
+    DependsOn: Lambda
+    Properties:
+      Description: !Sub  schedule rule for ${Lambda}
+      ScheduleExpression: !Ref ScheduleExpression
+      State: ENABLED
+      Targets:
+      - Arn: !GetAtt Lambda.Arn
+        Id: ScheduleTarget
+
+  PermissionToInvokeLambdaOnSchedule:
+    Type: AWS::Lambda::Permission
+    Condition: HasSchedule
+    DependsOn:
+    - Lambda
+    - ScheduleRuleForLambda
+    Properties:
+      FunctionName: !Ref Lambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleRuleForLambda.Arn
+
+  EventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: HasEventSource
+    Properties:
+      EventSourceArn: !Ref EventSourceArn
+      FunctionName: !GetAtt Lambda.Arn
+
+Outputs:
+  LambdaArn:
+    Value: !GetAtt Lambda.Arn
+
+  LambdaRoleName:
+    Value: !Ref LambdaRole
+
+  LambdaRoleArn:
+    Value: !GetAtt LambdaRole.Arn
+
+  LambdaManagedPolicy:
+    Value: !Ref LambdaManagedPolicy
