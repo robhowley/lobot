@@ -40,25 +40,11 @@ Parameters:
 
 
 Conditions:
-  HasManagedPolicyArns:
-    Fn::Not:
-    - Fn::Equals:
-      - Fn::Join:
-        - ''
-        - !Ref ManagedPolicyArns
-      - ''
+  HasManagedPolicyArns: !Not [!Equals [!Join ['', !Ref ManagedPolicyArns], '']]
 
-  HasSchedule:
-    Fn::Not:
-    - Fn::Equals:
-      - !Ref ScheduleExpression
-      - ''
+  HasSchedule: !Not [!Equals [!Ref ScheduleExpression, '']]
 
-  HasEventSource:
-    Fn::Not:
-    - Fn::Equals:
-      - !Ref EventSournceArn
-      - ''
+  HasEventSource: !Not [!Equals [!Ref EventSournceArn, '']]
 
 
 Resources:
@@ -77,8 +63,8 @@ Resources:
       ManagedPolicyArns:
         Fn::If:
         - HasManagedPolicyArns
-        - Ref: ManagedPolicyArns
-        - Ref: AWS::NoValue
+        - !Ref ManagedPolicyArns
+        - !Ref AWS::NoValue
       Policies:
       - PolicyName: logs
         PolicyDocument:
@@ -89,7 +75,12 @@ Resources:
             - logs:CreateLogStream
             - logs:PutLogEvents
             Resource: arn:aws:logs:*:*:*
-
+      - PolicyName: can-invoke-self
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action: lambda:invokeFunction
+            Resource: !Sub arn:aws:lambda:*:*:function:${FunctionName}
 
   Lambda:
     Type: AWS::Lambda::Function

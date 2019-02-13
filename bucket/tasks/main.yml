@@ -1,26 +1,18 @@
 
-- name: "{{ lobot_stdout_prefix }} - set cloudformation and j2_env paramers"
+- name: "set cloudformation and j2_env paramers"
   set_fact:
-    j2_env: "{{ {'environment_variables': (lambda_function.pop('environment_variables') or {})} }}"
-    cased_template_params: "{{
-        lambda_function
-          | copy_keys(exclude=['environment_variables'])
-          | snake_keys_to_pascal
-      }}"
+    j2_env: "{{ bucket | copy_keys(include=['sns_topics']) }}"
+    cased_template_params: "{{ bucket | copy_keys(exclude=['sns_topics']) | snake_keys_to_pascal }}"
+    final_stack_name: "{{ stack_name | default(bucket.bucket_name + '-stack') }}"
   no_log: "{{ lobot_keep_it_quiet }}"
 
 - include_role:
     name: lobot/_internal
   vars:
-    dynamic_render: true
-    deployment_type: lambda_function
-    rendered_filename: "{{ stack_name }}-{{ function_name }}.template"
-    cloudformation_template: cloudformation/lambda.template.j2
+    deployment_type: bucket
+    rendered_filename: "{{ bucket.bucket_name }}.template"
+    lookup_name: "{{ bucket.bucket_name }}"
+    stack_name: "{{ final_stack_name }}"
+    cloudformation_template: cloudformation/bucket_with_sns.template.j2
     template_params: "{{ cased_template_params }}"
-  no_log: "{{ lobot_keep_it_quiet }}"
-
-- name: "{{ lobot_stdout_prefix }} - store {{ stack_name }} stack variable"
-  set_fact:
-    lobot_stacks:
-      "{{ stack_output_prefix }}lambda_function": "{{ deployed_stack }}"
   no_log: "{{ lobot_keep_it_quiet }}"

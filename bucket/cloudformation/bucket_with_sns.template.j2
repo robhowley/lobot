@@ -9,7 +9,7 @@ Parameters:
   BucketReadAccess:
     Description: list of aws principals that can read from the bucket
     Type: CommaDelimitedList
-    Default: "*"
+    Default: ''
 
   CreateReadManagedPolicy:
     Type: String
@@ -28,37 +28,19 @@ Parameters:
 
 
 Conditions:
-  IsReadMpRequested:
-    Fn::Equals:
-    - !Ref CreateReadManagedPolicy
-    - 'true'
+  IsReadMpRequested: !Equals [!Ref CreateReadManagedPolicy, 'true']
 
-  IsWriteMpRequested:
-    Fn::Equals:
-    - !Ref CreateReadManagedPolicy
-    - 'true'
-    
-  IsFullControlMpRequested:
-    Fn::Equals:
-    - !Ref CreateReadManagedPolicy
-    - 'true'
+  IsWriteMpRequested: !Equals [!Ref CreateWriteManagedPolicy, 'true']
 
+  IsFullControlMpRequested: !Equals [!Ref CreateFullControlManagedPolicy, 'true']
 
-{% if sns_topics is defined %}
-  TopicSubscribeAccess:
-    Description: list of aws principals that can read from the bucket
-    Type: CommaDelimitedList
-{% if sns_topics.principal_subscribe_access is defined %}
-    Default: {{ sns_topics.principal_subscribe_access | join(',') }}
-{% else %}
-    Default: "*"
-{% endif %}
-{% endif %}
+  HasDefaultReadPolicyPrincipals: !Not [!Equals [!Join ['', !Ref BucketReadAccess], '']]
+
 
 Resources:
 
-{% if sns_topics is defined %}
-{% for topic in sns_topics.topics %}
+{% if j2_env.sns_topics is defined %}
+{% for topic in j2_env.sns_topics.topics %}
   {{ topic.get('resource_name', topic.name) }}:
     Type: AWS::SNS::Topic
     Properties:
@@ -84,27 +66,26 @@ Resources:
               aws:SourceArn: !Sub arn:aws:s3:::${BucketName}
         - Sid: Allow specified aws principals to subscribe
           Effect: Allow
-          Principal:
-            AWS: !Ref TopicSubscribeAccess
+          Principal: "*"
           Action: sns:Subscribe
           Resource: "*"
       Topics:
-{% for topic in sns_topics.topics %}
+{% for topic in j2_env.sns_topics.topics %}
       - !Ref {{ topic.get('resource_name', topic.name) }}
 {% endfor %}
 {% endif %}
 
   NewBucket:
     Type: AWS::S3::Bucket
-{% if sns_topics is defined %}
+{% if j2_env.sns_topics is defined %}
     DependsOn: SNSPublishAndSubscribeToTopicPolicy
 {% endif %}
     Properties:
       BucketName: !Ref BucketName
-{% if sns_topics is defined %}
+{% if j2_env.sns_topics is defined %}
       NotificationConfiguration:
         TopicConfigurations:
-{% for topic in sns_topics.topics %}
+{% for topic in j2_env.sns_topics.topics %}
         - Event: {{ topic.event }}
           Topic: !Ref {{ topic.get('resource_name', topic.name) }}
 {% if topic.key_filter is defined %}
@@ -127,38 +108,17 @@ Resources:
         - Sid: Allow new bucket read
           Effect: Allow
           Principal:
-            AWS: !Ref BucketReadAccess
+            AWS:
+              !If
+              - HasDefaultReadPolicyPrincipals
+              - !Ref BucketReadAccess
+              - !Ref AWS::AccountId
           Action:
           - s3:List*
           - s3:Get*
           Resource:
           - !Sub arn:aws:s3:::${NewBucket}
           - !Sub arn:aws:s3:::${NewBucket}/*
-
-{% for managed_policy in output_managed_policies or [] %}
-  {{ managed_policy.get('resource_name', managed_policy.name) }}:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: The ability to interact with ${NewBucket}
-      Path: "/"
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-        - Effect: Allow
-          Action:
-{% if managed_policy.policy == 'full' %}
-          - {{ s3_access_shorthand.get(managed_policy.policy) }}
-{% else %}
-{% for policy in managed_policy.policy %}
-          - {{ s3_access_shorthand.get(policy, policy) }}
-{% endfor %}
-{% endif %}
-          Resource:
-          - !Sub arn:aws:s3:::${NewBucket}
-          - !Sub arn:aws:s3:::${NewBucket}/*
-
-{% endfor %}
-
 
   ReadBucketManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -194,7 +154,7 @@ Resources:
           - !Sub arn:aws:s3:::${NewBucket}
           - !Sub arn:aws:s3:::${NewBucket}/*
 
-  WriteToBucketManagedPolicy:
+  FullControlBucketManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Condition: IsFullControlMpRequested
     Properties:
@@ -217,16 +177,22 @@ Outputs:
   BucketArn:
     Value: !GetAtt NewBucket.Arn
 
-{% if sns_topics is defined %}
-{% for topic in sns_topics.topics %}
-  {{ topic.get('output_name', (topic.resource_name or topic.name) + 'TopicArn') }}:
+  ReadBucketManagedPolicy:
+    Condition: IsReadMpRequested
+    Value: !Ref ReadBucketManagedPolicy
+
+  WriteToBucketManagedPolicy:
+    Condition: IsWriteMpRequested
+    Value: !Ref WriteToBucketManagedPolicy
+
+  FullControlBucketManagedPolicy:
+    Condition: IsFullControlMpRequested
+    Value: !Ref FullControlBucketManagedPolicy
+
+{% if j2_env.sns_topics is defined %}
+{% for topic in j2_env.sns_topics.topics %}
+  {{ topic.get('resource_name', topic.name) + 'Arn' }}:
     Value: !Ref {{ topic.get('resource_name', topic.name) }}
 
 {% endfor %}
 {% endif %}
-
-{% for managed_policy in output_managed_policies or [] %}
-  {{  managed_policy.name }}:
-    Value: !Ref {{ managed_policy.get('resource_name', managed_policy.name) }}
-
-{% endfor %}
