@@ -140,6 +140,13 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt ScheduleRuleForLambda.Arn
 
+  EventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: HasEventSource
+    Properties:
+      EventSourceArn: !Ref EventSourceArn
+      FunctionName: !GetAtt Lambda.Arn
+
 Outputs:
   LambdaArn:
     Value: !GetAtt Lambda.Arn
