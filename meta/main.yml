@@ -5,4 +5,4 @@ galaxy_info:
   author: robert.howley
   description: Reusing cloudformation templates is good.
 
-dependencies:
+dependencies: []
