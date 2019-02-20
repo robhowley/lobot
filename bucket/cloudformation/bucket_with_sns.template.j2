@@ -1,3 +1,7 @@
+{%- macro sns_resource_name(topic) -%}
+  {{ topic.get('resource_name') or topic.name.replace('-', '') }}
+{%- endmacro -%}
+
 
 AWSTemplateFormatVersion: '2010-09-09'
 Description: bucket that publishes filtered sns events
@@ -41,7 +45,7 @@ Resources:
 
 {% if j2_env.sns_topics is defined %}
 {% for topic in j2_env.sns_topics.topics %}
-  {{ topic.get('resource_name', topic.name) }}:
+  {{ sns_resource_name(topic) }}:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: {{ topic.name }}
@@ -71,7 +75,7 @@ Resources:
           Resource: "*"
       Topics:
 {% for topic in j2_env.sns_topics.topics %}
-      - !Ref {{ topic.get('resource_name', topic.name) }}
+      - !Ref {{ sns_resource_name(topic) }}
 {% endfor %}
 {% endif %}
 
@@ -87,7 +91,7 @@ Resources:
         TopicConfigurations:
 {% for topic in j2_env.sns_topics.topics %}
         - Event: {{ topic.event }}
-          Topic: !Ref {{ topic.get('resource_name', topic.name) }}
+          Topic: !Ref {{ sns_resource_name(topic) }}
 {% if topic.key_filter is defined %}
           Filter:
             S3Key:
@@ -191,8 +195,8 @@ Outputs:
 
 {% if j2_env.sns_topics is defined %}
 {% for topic in j2_env.sns_topics.topics %}
-  {{ topic.get('resource_name', topic.name) + 'Arn' }}:
-    Value: !Ref {{ topic.get('resource_name', topic.name) }}
+  {{ topic.get('output_name') or (sns_resource_name(topic) + 'Arn') }}:
+    Value: !Ref {{ sns_resource_name(topic) }}
 
 {% endfor %}
 {% endif %}
