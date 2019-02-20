@@ -2,11 +2,7 @@
 - name: "set cloudformation and j2_env paramers"
   set_fact:
     j2_env: "{{ {'environment_variables': (lambda_function.pop('environment_variables') or {})} }}"
-    cased_template_params: "{{
-        lambda_function
-          | copy_keys(exclude=['environment_variables'])
-          | snake_keys_to_pascal
-      }}"
+    cased_template_params: "{{ lambda_function | prep_template_parameters(exclude=['environment_variables']) }}"
     final_stack_name: "{{ stack_name | default(lambda_function.function_name + '-stack') }}"
   no_log: "{{ lobot_keep_it_quiet }}"
 
