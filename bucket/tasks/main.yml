@@ -2,7 +2,7 @@
 - name: "set cloudformation and j2_env paramers"
   set_fact:
     j2_env: "{{ bucket | copy_keys(include=['sns_topics']) }}"
-    cased_template_params: "{{ bucket | copy_keys(exclude=['sns_topics']) | snake_keys_to_pascal }}"
+    cased_template_params: "{{ bucket | prep_template_parameters(exclude=['sns_topics']) }}"
     final_stack_name: "{{ stack_name | default(bucket.bucket_name + '-stack') }}"
   no_log: "{{ lobot_keep_it_quiet }}"
 
