@@ -1,3 +1,5 @@
+[![release](https://img.shields.io/github/release/robhowley/lobot.svg)](https://img.shields.io/github/release/robhowley/lobot.svg)
+
 # lobot: deploy aws resources with ansible
 
 An ansible role that leverages jinja2 macros for reusable CloudFormation templates for some of the most common AWS 
