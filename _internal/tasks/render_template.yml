@@ -1,4 +1,4 @@
-
+---
 - name: "create directory for rendered {{ deployment_type }} templates"
   file:
     path: "{{ default_rendered_template_dirs.get(deployment_type) }}"

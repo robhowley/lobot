@@ -1,4 +1,4 @@
-
+---
 # set full paths for defaults
 default_stack_policy: "{{ lobot_internal_role_path }}/files/default-stack-policy.policy"
 
@@ -7,3 +7,4 @@ default_rendered_template_dir: "{{ lobot_role_path }}/rendered_cfn_templates"
 default_rendered_template_dirs:
   bucket: "{{ default_rendered_template_dir }}/buckets"
   lambda_function: "{{ default_rendered_template_dir }}/lambdas"
+  queue: "{{ default_rendered_template_dir }}/queues"

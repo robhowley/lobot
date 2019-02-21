@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create SQS optionally subscribed to the specified sns topic
+
+Parameters:
+
+  QueueName:
+    Type: String
+
+  SubscribeToSnsTopicArn:
+    Type: String
+    Default: ''
+
+  VisibilityTimeout:
+    Type: Number
+    Default: 60
+
+  MessageDelaySeconds:
+    Type: Number
+    Default: -1
+
+  MessageRetentionPeriod:
+    Type: Number
+    Default: -1
+
+  ReceiveMessageWaitTimeSeconds:
+    Type: Number
+    Default: -1
+
+  RedrivePolicyMaxReceiveCount:
+    Type: Number
+    Default: -1
+
+
+Conditions:
+
+  HasArnForSubscription: !Not [!Equals [!Ref SubscribeToSnsTopicArn, '']]
+
+  HasMessageDelaySeconds: !Not [!Equals [!Ref MessageDelaySeconds, -1]]
+
+  HasRetentionPeriod: !Not [!Equals [!Ref MessageRetentionPeriod, -1]]
+
+  HasReceiveWaitTime: !Not [!Equals [!Ref ReceiveMessageWaitTimeSeconds, -1]]
+
+  HasRedrivePolicy: !Not [!Equals [!Ref RedrivePolicyMaxReceiveCount, -1]]
+
+
+Resources:
+
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Condition: HasRedrivePolicy
+    Properties:
+      QueueName: !Sub ${QueueName}-Dlq
+
+  NewQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref QueueName
+      VisibilityTimeout: !Ref VisibilityTimeout
+      MessageRetentionPeriod:
+        !If
+        - HasRetentionPeriod
+        - !Ref MessageRetentionPeriod
+        - !Ref AWS::NoValue
+      DelaySeconds:
+        !If
+        - HasMessageDelaySeconds
+        - !Ref MessageDelaySeconds
+        - !Ref AWS::NoValue
+      ReceiveMessageWaitTimeSeconds:
+        !If
+        - HasReceiveWaitTime
+        - !Ref ReceiveMessageWaitTimeSeconds
+        - !Ref AWS::NoValue
+      RedrivePolicy:
+        !If
+        - HasRedrivePolicy
+        - deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+          maxReceiveCount: !Ref RedrivePolicyMaxReceiveCount
+        - !Ref AWS::NoValue
+
+  NewQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Condition: HasArnForSubscription
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Id: MyQueuePolicy
+        Statement:
+        - Sid: allow-send-message-to-queue-from-sns-topic
+          Effect: Allow
+          Principal: "*"
+          Action:
+          - SQS:SendMessage
+          - SQS:ReceiveMessage
+          Resource: "*"
+          Condition:
+            ArnEquals:
+              aws:SourceArn: !Ref SubscribeToSnsTopicArn
+      Queues:
+      - !Ref NewQueue
+
+  SQSSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasArnForSubscription
+    DependsOn:
+    - NewQueue
+    - NewQueuePolicy
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt NewQueue.Arn
+      TopicArn: !Ref SubscribeToSnsTopicArn
+
+
+Outputs:
+
+  QueueUrl:
+    Description: url of queue
+    Value: !Ref NewQueue
+
+  QueueArn:
+    Description: arn of the queue
+    Value: !GetAtt NewQueue.Arn
+
+  QueueName:
+    Description: name of the queue
+    Value: !GetAtt NewQueue.QueueName
+
+  DeadLetterQueueUrl:
+    Condition: HasRedrivePolicy
+    Description: url of dead letter queue
+    Value: !Ref DeadLetterQueue
+
+  DeadLetterQueueArn:
+    Condition: HasRedrivePolicy
+    Description: arn of the dead letter queue
+    Value: !GetAtt DeadLetterQueue.Arn
+
+  DeadLetterQueueName:
+    Condition: HasRedrivePolicy
+    Description: name of the dead letter queue
+    Value: !GetAtt DeadLetterQueue.QueueName

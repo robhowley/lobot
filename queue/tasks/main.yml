@@ -1,0 +1,17 @@
+---
+- name: "set cloudformation and j2_env paramers"
+  set_fact:
+    cased_template_params: "{{ queue | prep_template_parameters }}"
+    final_stack_name: "{{ stack_name | default(queue.queue_name + '-stack') }}"
+  no_log: "{{ lobot_keep_it_quiet }}"
+
+- include_role:
+    name: lobot/_internal
+  vars:
+    deployment_type: queue
+    rendered_filename: "{{ queue.queue_name }}.template"
+    lookup_name: "{{ queue.queue_name }}"
+    stack_name: "{{ final_stack_name }}"
+    cloudformation_template: cloudformation/queue.template.j2
+    template_params: "{{ cased_template_params }}"
+  no_log: "{{ lobot_keep_it_quiet }}"

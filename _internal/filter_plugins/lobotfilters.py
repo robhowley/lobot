@@ -26,8 +26,15 @@ def flatten_dict(some_dict, delim='_'):
     return dict([item for k, v in some_dict.items() for item in flatten_nested(k, v)])
 
 
+def bool_values_to_j2_string(some_dict):
+    def bool_to_str(x):
+        return x if not isinstance(x, bool) else str(x).lower()
+
+    return {k: bool_to_str(v) for k, v in some_dict.items()}
+
+
 def prep_template_parameters(some_dict, **kwargs):
-    return snake_keys_to_pascal(flatten_dict(copy_keys(some_dict, **kwargs)))
+    return snake_keys_to_pascal(bool_values_to_j2_string(flatten_dict(copy_keys(some_dict, **kwargs))))
 
 
 class FilterModule(object):
