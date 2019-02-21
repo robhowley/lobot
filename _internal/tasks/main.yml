@@ -1,4 +1,4 @@
-
+---
 - name: "make the tasks available with relative path variable"
   set_fact:
     lobot_role_path: "{{ role_path }}/.."

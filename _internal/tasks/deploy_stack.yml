@@ -1,4 +1,4 @@
-
+---
 - name: "Deploy stack {{ stack_name }}"
   cloudformation:
     stack_name: "{{ stack_name }}"

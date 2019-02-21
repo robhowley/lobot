@@ -1,8 +1,36 @@
 ---
 allow_duplicates: true
 
+dependencies: []
+
 galaxy_info:
   author: robert.howley
-  description: Reusing cloudformation templates is good.
-
-dependencies: []
+  description: Reusing cloudformation to deploy aws resources is good. Doing so in an ansible native api is better.
+  license: license (BSD, MIT)
+  min_ansible_version: 2.4
+  platforms:
+  - name: Amazon
+    versions:
+    - all
+  - name: EL
+    versions:
+    - 5
+    - 6
+    - 7
+  - name: Fedora
+    versions:
+    - 16
+    - 17
+    - 18
+  - name: Ubuntu
+    versions:
+    - all
+  - name: Debian
+    versions:
+    - all
+  galaxy_tags:
+  - aws
+  - amazon
+  - cloudformation
+  - cloud
+  - cfn

@@ -1,4 +1,4 @@
-
+---
 # set full paths for defaults
 default_stack_policy: "{{ lobot_internal_role_path }}/files/default-stack-policy.policy"
 

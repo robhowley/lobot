@@ -1,4 +1,4 @@
-
+---
 - name: "set cloudformation and j2_env paramers"
   set_fact:
     j2_env: "{{ bucket | copy_keys(include=['sns_topics']) }}"
