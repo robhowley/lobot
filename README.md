@@ -1,4 +1,4 @@
-[![release](https://img.shields.io/github/release/robhowley/lobot.svg)](https://img.shields.io/github/release/robhowley/lobot.svg)
+[![release](https://img.shields.io/github/release/robhowley/lobot.svg)](https://github.com/cytopia/ansible-role-cloudformation/releases)
 
 # lobot: deploy aws resources with ansible
 
